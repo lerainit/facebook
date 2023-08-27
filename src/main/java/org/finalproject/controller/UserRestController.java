@@ -45,6 +45,8 @@ public class UserRestController {
 
     private final DefaultUserService defaultUserService;
 
+    private final GeneralService<UserImage> imageService;
+
     private final UserDtoMapper dtoMapper;
 
     private final PostDtoMapper postMapper;
@@ -59,14 +61,14 @@ public class UserRestController {
 
 
 
-
     @GetMapping
     public List<UserDto> getAll() {
 
-       List<User> userList =  userService.findAll();
-       List<UserDto> userDtoList = userList.stream().map(dtoMapper::convertToDto).collect(Collectors.toList());
+        return    userService.findAll()
+                .stream()
+                .map(dtoMapper::convertToDto).collect(Collectors.toList());
 
-        return userDtoList;
+
     }
 
     @GetMapping("/{page}/{size}")
@@ -74,9 +76,10 @@ public class UserRestController {
     public ResponseEntity<?> findAll(@PathVariable Integer page, @PathVariable Integer size) {
         Sort sort =  Sort.by(new Sort.Order(Sort.Direction.ASC,"id"));
         Pageable pageable = PageRequest.of(page,size,sort);
-     Page users = userService.findAll(pageable);
-     List<User> userList =  users.toList();
-        List<UserDto> userDtoList = userList.stream().map(dtoMapper::convertToDto).collect(Collectors.toList());
+        List<UserDto> userDtoList  = userService.findAll(pageable).toList()
+                .stream()
+                .map(dtoMapper::convertToDto)
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(userDtoList);
     }
@@ -93,7 +96,7 @@ public class UserRestController {
 
     @GetMapping("/email")
     public ResponseEntity<?>  getByEmail(@RequestBody Email email) {
-     Optional<User> userOptional = defaultUserService.getByEmail(email.getEmail());
+        Optional<User> userOptional = defaultUserService.getByEmail(email.getEmail());
 
         if (userOptional.isEmpty()) {
             return ResponseEntity.badRequest().body("User not found");
@@ -114,21 +117,21 @@ public class UserRestController {
     @GetMapping("/profile")
     public ResponseEntity<?>  getProfile() {
 
-     String auth  = SecurityContextHolder.getContext().getAuthentication().getName();
-     Optional<User> profile  = defaultUserService.getByFullName(auth);
+        String auth  = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<User> profile  = defaultUserService.getByFullName(auth);
 
-    if (profile.isEmpty()) {
-    return ResponseEntity.badRequest().body("User not found");
-    }
+        if (profile.isEmpty()) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
         return ResponseEntity.ok().body(dtoMapper.convertToDto(profile.get()));
     }
 
     @GetMapping("/{userId}/friends")
     public ResponseEntity<?>  getFriends(@PathVariable("userId")  Long  userId) {
 
-        List<Friend> friends = defaultService.friendsOfUser(userId);
-
-        List<FriendDto> friendDtoList = friends.stream().map(friendMapper::convertToDto).collect(Collectors.toList());
+        List<FriendDto> friendDtoList = defaultService.friendsOfUser(userId)
+                .stream()
+                .map(friendMapper::convertToDto).collect(Collectors.toList());
 
         return ResponseEntity.ok().body(friendDtoList);
     }
@@ -140,8 +143,10 @@ public class UserRestController {
         if (user   == null) {
             return ResponseEntity.badRequest().body("User not found");
         }
-        List<Chat> userChats = user.getChats();
-        List<ChatDto> userChatsDto = userChats.stream().map(chatMapper::convertToDto).collect(Collectors.toList());
+        List<ChatDto> userChatsDto = user.getChats()
+                .stream()
+                .map(chatMapper::convertToDto)
+                .collect(Collectors.toList());
         return ResponseEntity.ok().body(userChatsDto );
     }
 
@@ -153,8 +158,10 @@ public class UserRestController {
         if (profile.isEmpty()) {
             return ResponseEntity.badRequest().body("User not found");
         }
-        List<Chat> userChats = profile.get().getChats();
-        List<ChatDto> userChatsDto = userChats.stream().map(chatMapper::convertToDto).collect(Collectors.toList());
+        List<ChatDto> userChatsDto  = profile.get().getChats()
+                .stream()
+                .map(chatMapper::convertToDto)
+                .collect(Collectors.toList());
         return ResponseEntity.ok().body(userChatsDto );
     }
 
@@ -167,8 +174,10 @@ public class UserRestController {
             return ResponseEntity.badRequest().body("User not found");
         }
 
-        List<Post> userPosts = user.getPosts();
-        List<PostDto> userPostsDto = userPosts.stream().map(postMapper::convertToDto).collect(Collectors.toList());
+        List<PostDto> userPostsDto = user.getPosts()
+                .stream()
+                .map(postMapper::convertToDto)
+                .collect(Collectors.toList());
         return ResponseEntity.ok().body(userPostsDto );
     }
 
@@ -186,12 +195,15 @@ public class UserRestController {
             throw new RuntimeException(e);
         }
         User user = userService.getOne(id);
-     List<UserImage> userImages = user.getUserImages();
-     UserImage newImage = new UserImage();
-     newImage.setImageUrl(imgUrl);
-     userImages.add(newImage);
-     user.setUserImages(userImages);
+        List<UserImage> userImages = user.getUserImages();
+        UserImage newImage = new UserImage();
+        newImage.setImageUrl(imgUrl);
+        userImages.add(newImage);
+        user.setUserImages(userImages);
         userService.save(user );
+        newImage.setUser(user);
+        newImage.setUserId(user.getId());
+        imageService.save(newImage);
     }
 
     @PostMapping("/{id}/avatar")
@@ -203,7 +215,7 @@ public class UserRestController {
             throw new RuntimeException(e);
         }
         User user = userService.getOne(id);
-       user.setProfilePicture(imgUrl);
+        user.setProfilePicture(imgUrl);
         userService.save(user );
     }
 

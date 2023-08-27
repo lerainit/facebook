@@ -19,7 +19,7 @@ public class UserRequestDto {
     @NotNull
     @Size(min = 4, message = "user name should have at least 4 characters")
     private String fullName;
-   @Email
+    @Email
     private String email;
     private String password;
 

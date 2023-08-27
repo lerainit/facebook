@@ -7,9 +7,8 @@ import org.finalproject.entity.Friend;
 import org.finalproject.entity.User;
 import org.finalproject.repository.FriendJpaRepository;
 import org.hibernate.Session;
-import org.springframework.data.repository.query.Param;
 import org.finalproject.repository.UserJpaRepository;
-import org.finalproject.utilites.FriendStatus;
+import org.finalproject.util.FriendStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -44,8 +43,8 @@ public class DefaultFriendService extends GeneralService<Friend> {
 
     public List<Friend> friendshipRequests(Long userId) {
         return friendRepository.friendsOfUser(userId).stream()
-                                .filter(el -> Objects.equals(el.getStatus(), FriendStatus.pending))
-                                .toList();
+                .filter(el -> Objects.equals(el.getStatus(), FriendStatus.pending))
+                .toList();
     }
 
     public List<User> getMutualFriends(Long userId, Long friendId) {
@@ -84,8 +83,8 @@ public class DefaultFriendService extends GeneralService<Friend> {
             return filteredFriends.get(0);
         } else {
             return super.save(new Friend(FriendStatus.pending,
-                                            userJpaRepository.findEntityById(userId),
-                                            userJpaRepository.findEntityById(friendId)));
+                    userJpaRepository.findEntityById(userId),
+                    userJpaRepository.findEntityById(friendId)));
         }
     }
 

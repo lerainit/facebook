@@ -52,16 +52,35 @@ public class AuthController {
 
 
     @PostMapping("login")
-    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest authRequest) {
-        final JwtResponse token = authService.login(authRequest);
-        return ResponseEntity.ok(token);
+    public ResponseEntity<?> login(@RequestBody JwtRequest authRequest) {
+        try {
+            final JwtResponse token = authService.login(authRequest);
+            return ResponseEntity.ok(token);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Incorrect login or password");
+        }
     }
+
+    @PostMapping("renew")
+
+    public ResponseEntity<?> returnRefresh(@RequestParam String refresh) {
+
+
+        try {
+            String token =   authService.returnRefresh(refresh);
+            return ResponseEntity.ok(token);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
 
     @PostMapping("registration")
     public ResponseEntity<?> register(@RequestBody RegisterRequest authRequest) {
         Optional<User> existingUser = service.getByEmail(authRequest.getEmail());
         if ( existingUser.isPresent() ) {
-         return ResponseEntity.badRequest().body("User with that email already exists");
+            return ResponseEntity.badRequest().body("User with that email already exists");
         }
         authService.register(authRequest);
         return ResponseEntity.ok().build();
@@ -95,7 +114,7 @@ public class AuthController {
 
     @PostMapping
     public ResponseEntity<?> getUrl(@RequestBody Email url) {
-       setUrl(url.getEmail());
+        setUrl(url.getEmail());
 
         return  ResponseEntity.ok(url);
 
@@ -122,14 +141,14 @@ public class AuthController {
     @PutMapping
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest) {
         try {
-         Optional<User> userOptional = userService.findAll().stream().filter(el -> el.getActivationCode().equals(changePasswordRequest.getCode())).findAny();
-          if (userOptional.isEmpty()) {
-              return ResponseEntity.badRequest().body("User not found");
-          }
+            Optional<User> userOptional = userService.findAll().stream().filter(el -> el.getActivationCode().equals(changePasswordRequest.getCode())).findAny();
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
 
-          User user = userOptional.get();
-          String password = changePasswordRequest.getNewPassword();
-          user.setPassword(passwordEncoder.encode(password));
+            User user = userOptional.get();
+            String password = changePasswordRequest.getNewPassword();
+            user.setPassword(passwordEncoder.encode(password));
             userService.save(user);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
