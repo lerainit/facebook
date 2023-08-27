@@ -1,7 +1,7 @@
 jwt:
   secret:
-    access: ${ACCESS}
-    refresh: ${REFRESH}
+    access: ${access}
+    refresh: ${refresh}
 server:
   port: 9000
 spring:
