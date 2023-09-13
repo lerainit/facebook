@@ -87,5 +87,4 @@ public abstract class GeneralFacade<E extends BaseEntity, I, O> {
         return convertToDto(service.findEntityById(id));
     }
 
-
 }

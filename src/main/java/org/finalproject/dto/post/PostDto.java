@@ -1,13 +1,10 @@
-package org.finalproject.dto;
+package org.finalproject.dto.post;
 
 import lombok.*;
-import org.finalproject.entity.Post;
+import org.finalproject.dto.UserDto;
 import org.finalproject.entity.PostImage;
-import org.finalproject.entity.PostTypes;
-import org.finalproject.entity.User;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -20,12 +17,14 @@ import java.util.Set;
 public class PostDto {
 
     private Long id;
-    private User user;
+    private UserDto user;
     private String postType;
     private String content;
-    private Post parentId;
-    private List<User> likes;
-    private Set<User> reposts;
+    private PostDto parentId;
+    private List<UserDto> likes;
+    private Set<UserDto> repostsUsers;
+    private List<RepostDto> reposts;
+
     private List<PostImage> postImages;
     private String createdBy;
     private Date createdDate;

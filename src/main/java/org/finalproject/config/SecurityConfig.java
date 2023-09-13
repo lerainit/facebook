@@ -5,7 +5,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-
 import org.finalproject.controller.AuthController;
 import org.finalproject.entity.User;
 import org.finalproject.filter.JwtFilter;
@@ -17,11 +16,9 @@ import org.finalproject.service.jwt.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -30,9 +27,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 import org.springframework.web.cors.CorsConfiguration;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -44,15 +39,12 @@ import java.util.Optional;
 
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
-
     private final AuthService authService;
     private final AuthController authController;
     private final GeneralService<User> userService;
-
     private final JwtProvider jwtProvider;
     @Autowired
     private CustomOAuth2UserService oauthUserService;
-
     private final UserJpaRepository repository;
 
     @Bean
@@ -66,7 +58,6 @@ public class SecurityConfig {
         corsConfiguration.setMaxAge(1000L);
         return corsConfiguration;
     }
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -100,12 +91,16 @@ public class SecurityConfig {
                         String email = oauthUser.getClaims().get("email").toString();
                         String fullName = oauthUser.getClaims().get("name").toString();
 
-                        User authUser = new User();
-                        authUser.setEmail(email);
-                        authUser.setFullName(fullName);
                         Optional<User> existingUser = userService.findAll().stream().filter(el ->el.getEmail().equals(email)).findAny();
                         if (existingUser.isEmpty()) {
+
+                            User authUser = new User();
+                            authUser.setEmail(email);
+                            authUser.setFullName(fullName);
+                            authUser.setActivated(true);
                             userService.save(authUser);
+                        } else {
+                            fullName = existingUser.get().getFullName();
                         }
 
                         Long id = repository.getByEmail(email).get().getId();
@@ -115,7 +110,6 @@ public class SecurityConfig {
                         newRefreshStorage.put("token",token);
 
                         authService.setRefreshStorage(newRefreshStorage);
-
 
                         response.sendRedirect( authController.getUrl());
 
@@ -135,23 +129,19 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests(
                         authz -> authz
-                                .requestMatchers("/api/auth/**", "/api/auth/token","/api/auth","/swagger-ui/**","api/oauth2/authorization/google","/posts").permitAll()
-                                .anyRequest().authenticated()
 
+                                .requestMatchers("/api/auth/**", "/api/auth/token","/api/auth","/swagger-ui/**","api/oauth2/authorization/google","/posts/**", "/websocket-endpoint/**", "/topic/messages","/ws/**").permitAll()
+                                .anyRequest().authenticated()
                                 .and()
                                 .addFilterAfter(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 
-
                 )
-
                 .build();
-
     }
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers("v3/api-docs/**");
     }
-
 
 }

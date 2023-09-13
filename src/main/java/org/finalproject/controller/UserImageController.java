@@ -3,8 +3,6 @@ package org.finalproject.controller;
 import lombok.RequiredArgsConstructor;
 import org.finalproject.dto.UserImageDtoMapper;
 import org.finalproject.dto.UserImageDtoRequest;
-import org.finalproject.dto.UserRequestDto;
-import org.finalproject.entity.User;
 import org.finalproject.entity.UserImage;
 import org.finalproject.service.GeneralService;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +14,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/userImages")
-public class UserImageRestController {
+public class UserImageController {
 
     private final GeneralService<UserImage> userImageService;
 
@@ -35,8 +33,8 @@ public class UserImageRestController {
         try {
 
             UserImage imageEntity = userImageService.getOne(image.getId());
-            imageEntity.setImageUrl(image.getImageUrl());
-            userImageService.save(imageEntity);
+             imageEntity.setImageUrl(image.getImageUrl());
+             userImageService.save(imageEntity);
 
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
@@ -48,7 +46,7 @@ public class UserImageRestController {
     @GetMapping("/id")
     public ResponseEntity<?> getById(@PathVariable("id") Long userImageId) {
 
-        UserImage userImage = userImageService.getOne(userImageId);
+       UserImage userImage = userImageService.getOne(userImageId);
         if (userImage == null) {
             return ResponseEntity.badRequest().body("MessageImage not found");
         }

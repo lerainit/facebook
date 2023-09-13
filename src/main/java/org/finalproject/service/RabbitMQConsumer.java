@@ -1,4 +1,4 @@
-//package org.finalproject.service;
+package org.finalproject.service;//package org.finalproject.service;
 //
 //import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 //import org.springframework.amqp.rabbit.annotation.RabbitListener;

@@ -20,15 +20,15 @@ public interface FriendJpaRepository extends RepositoryInterface<Friend>, JpaSpe
     List<User> suggestedUsersForFriendship(Long userId);
 
     @Query("select u from User u where u.id in (" +
-            "select t.friendID from (" +
-            "select CASE WHEN f.friend.id in (:userId, :friendId) THEN f.user.id " +
-            "WHEN f.user.id in (:userId, :friendId) THEN f.friend.id " +
-            "END friendID " +
-            "from Friend f " +
-            "where f.status = 'accepted' " +
-            "and (f.user.id in (:userId, :friendId) or f.friend.id in (:userId, :friendId))) t " +
-            "group by t.friendID having count(*) > 1) " +
-            "and u.id not in (:userId, :friendId)")
+                    "select t.friendID from (" +
+                    "select CASE WHEN f.friend.id in (:userId, :friendId) THEN f.user.id " +
+                    "WHEN f.user.id in (:userId, :friendId) THEN f.friend.id " +
+                    "END friendID " +
+                    "from Friend f " +
+                    "where f.status = 'accepted' " +
+                    "and (f.user.id in (:userId, :friendId) or f.friend.id in (:userId, :friendId))) t " +
+                    "group by t.friendID having count(*) > 1) " +
+                    "and u.id not in (:userId, :friendId)")
     List<User> getMutualFriends(Long userId, Long friendId);
 
     @Query("select f from Friend f where :userId in (f.friend.id, f.user.id) and :friendId in (f.friend.id, f.user.id)")

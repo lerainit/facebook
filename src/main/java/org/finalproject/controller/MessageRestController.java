@@ -1,16 +1,13 @@
 package org.finalproject.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.finalproject.dto.UserDto;
 import org.finalproject.dto.chat.MessageDto;
 import org.finalproject.dto.chat.MessageDtoMapper;
 import org.finalproject.dto.chat.MessageDtoRequest;
+import org.finalproject.entity.Chat;
 import org.finalproject.entity.Message;
-import org.finalproject.entity.User;
 import org.finalproject.service.DefaultMessageService;
 import org.finalproject.service.GeneralService;
-import org.finalproject.service.RabbitMQProducerServiceImpl;
 import org.finalproject.service.jwt.UserService;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
@@ -19,7 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -32,6 +28,7 @@ import java.util.stream.Collectors;
 public class MessageRestController {
 
     private final GeneralService<Message> messageService;
+    private final GeneralService<Chat> chatService;
     private final MessageDtoMapper messageDtoMapper;
 
     private final RabbitTemplate rabbitTemplate;
@@ -61,26 +58,6 @@ public class MessageRestController {
         return ResponseEntity.ok(messageDtoList);
     }
 
-    @PostMapping
-    public ResponseEntity<?> createMessage(@RequestBody MessageDtoRequest messageDtoRequest) throws IOException {
-
-        try {
-            String auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-            User user = userService.getByEmail(auth).get();
-            Message messageEntity = messageDtoMapper.convertToEntity(messageDtoRequest);
-            messageEntity.setSender(user);
-            messageService.save(messageEntity);
-            //need to refactor for group chats
-            List<UserDto> users = messageDtoRequest.getChat().getUsers();
-            Long toUserId = users.get(0).getId();
-            rabbitTemplate.convertAndSend("messages-exchange", "user." + toUserId, messageDtoRequest.getContent());
-            rabbitTemplate.convertAndSend("notification-exchange", "user." + toUserId, messageDtoRequest);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable("id") Long id) {
 
@@ -91,19 +68,19 @@ public class MessageRestController {
         return ResponseEntity.ok().body(messageDtoMapper.decorateDto(message));
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deleteMessage(@RequestBody MessageDtoRequest messageDtoRequest) {
-
-        String auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-        try {
-            User user = userService.getByEmail(auth).get();
-            messageDtoRequest.setId(user.getId());
-            messageService.delete(messageDtoMapper.convertToEntity(messageDtoRequest));
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+    //    @DeleteMapping
+    //    public ResponseEntity<?> deleteMessage(@RequestBody MessageDtoRequest messageDtoRequest) {
+    //
+    //        String auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+    //        try {
+    //            User user = userService.getByEmail(auth).get();
+    //            messageDtoRequest.setId(user.getId());
+    //            messageService.delete(messageDtoMapper.convertToEntity(messageDtoRequest));
+    //            return ResponseEntity.ok().build();
+    //        } catch (RuntimeException e) {
+    //            return ResponseEntity.badRequest().body(e.getMessage());
+    //        }
+    //    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteById(@PathVariable("id") Long chatId) {
@@ -116,23 +93,24 @@ public class MessageRestController {
         }
     }
 
-    @PutMapping
+    @PostMapping
     @MessageMapping("/send")
-    public ResponseEntity<?> update(@RequestBody MessageDtoRequest messageDtoRequest) throws IOException {
+    public ResponseEntity<?> createNewMessage(@RequestBody MessageDtoRequest messageDtoRequest) throws IOException {
 
         try {
-            String auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-            User user = userService.getByEmail(auth).get();
-            Message messageEntity = messageDtoMapper.convertToEntity(messageDtoRequest);
-            messageEntity.setSender(user);
-            messageEntity.setCreatedDate(messageService.getOne(messageEntity.getId()).getCreatedDate());
-            messageEntity.setCreatedBy(messageService.getOne(messageEntity.getId()).getCreatedBy());
-            messageService.save(messageEntity);
-            //need to refactor for group chats
-            List<UserDto> users = messageDtoRequest.getChat().getUsers();
-            Long toUserId = users.get(0).getId();
-            rabbitTemplate.convertAndSend("messages-exchange", "user." + toUserId, messageDtoRequest.getContent());
-            rabbitTemplate.convertAndSend("notification-exchange", "user." + toUserId, messageDtoRequest);
+            defaultMessageService.createNewMessage(messageDtoRequest);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping
+    @MessageMapping("/update")
+    public ResponseEntity<?> editMessage(@RequestBody MessageDtoRequest messageDtoRequest) throws IOException {
+
+        try {
+            defaultMessageService.editMessage(messageDtoRequest);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -140,15 +118,16 @@ public class MessageRestController {
     }
 
     @GetMapping("/findByContent")
-    public ResponseEntity<?> findByContent(@RequestParam String partOfMsg) {
+    public ResponseEntity<?> findByContent(@RequestBody MessageDtoRequest messageDtoRequest) {
 
         try {
-            String auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-            User user = userService.getByEmail(auth).get();
-            return ResponseEntity.ok(defaultMessageService.findByContent(partOfMsg, user.getId()));
+            return ResponseEntity.ok(defaultMessageService.findByContent(messageDtoRequest.getContent()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+//    @PostMapping
+//    readmessages(List newreadmessages)
 
 }

@@ -25,7 +25,7 @@ public class DefaultFriendService extends GeneralService<Friend> {
 
     public List<Friend> friendsOfUser(Long userId) {
         List<Friend> friends = friendRepository.friendsOfUser(userId);
-        org.hibernate.Session session = (Session) entityManager.getDelegate();
+        Session session = (Session) entityManager.getDelegate();
         return friends.stream().map((el) -> {
             session.evict(el);
             if (Objects.equals(el.getFriend().getId(), userId)) {
@@ -43,8 +43,8 @@ public class DefaultFriendService extends GeneralService<Friend> {
 
     public List<Friend> friendshipRequests(Long userId) {
         return friendRepository.friendsOfUser(userId).stream()
-                .filter(el -> Objects.equals(el.getStatus(), FriendStatus.pending))
-                .toList();
+                                .filter(el -> Objects.equals(el.getStatus(), FriendStatus.pending))
+                                .toList();
     }
 
     public List<User> getMutualFriends(Long userId, Long friendId) {
@@ -83,8 +83,8 @@ public class DefaultFriendService extends GeneralService<Friend> {
             return filteredFriends.get(0);
         } else {
             return super.save(new Friend(FriendStatus.pending,
-                    userJpaRepository.findEntityById(userId),
-                    userJpaRepository.findEntityById(friendId)));
+                                            userJpaRepository.findEntityById(userId),
+                                            userJpaRepository.findEntityById(friendId)));
         }
     }
 
@@ -100,7 +100,7 @@ public class DefaultFriendService extends GeneralService<Friend> {
 
     public List<Friend> getFriendByName(Long id, String name) {
         List<Friend> friends = friendRepository.getFriendByUserIdFriendName(id, name);
-        org.hibernate.Session session = (Session) entityManager.getDelegate();
+        Session session = (Session) entityManager.getDelegate();
         return friends.stream().map((el) -> {
             session.evict(el);
             if (Objects.equals(el.getFriend().getId(), id)) {

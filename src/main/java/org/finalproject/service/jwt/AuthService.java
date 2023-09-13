@@ -9,10 +9,7 @@ import jakarta.transaction.Transactional;
 import lombok.*;
 import org.finalproject.entity.User;
 import org.finalproject.exception.AuthException;
-import org.finalproject.jwt.JwtAuthentication;
-import org.finalproject.jwt.JwtRequest;
-import org.finalproject.jwt.JwtResponse;
-import org.finalproject.jwt.RegisterRequest;
+import org.finalproject.jwt.*;
 import org.finalproject.service.GeneralService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -24,10 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -55,18 +49,18 @@ public class AuthService {
     public JwtResponse login(@NonNull JwtRequest authRequest) {
         final User user = userService.getByEmail(authRequest.getEmail())
                 .orElseThrow(() -> new AuthException("User not found"));
-        if (passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
+        if (passwordEncoder.matches(authRequest.getPassword(), user.getPassword()) && user.isActivated() == true) {
 
             final String refreshToken = jwtProvider.generateRefreshToken(user);
-            if (refreshStorage.containsKey(authRequest.getEmail())) {
-                return new JwtResponse(jwtProvider.generateAccessToken(user), refreshStorage.get(authRequest.getEmail()));
+           if (refreshStorage.containsKey(authRequest.getEmail())) {
+               return new JwtResponse(jwtProvider.generateAccessToken(user), refreshStorage.get(authRequest.getEmail()));
 
-            } else {
-                refreshStorage.put(authRequest.getEmail(), refreshToken);
+           } else {
+           refreshStorage.put(authRequest.getEmail(), refreshToken);
 
-                return new JwtResponse(jwtProvider.generateAccessToken(user), refreshToken);
+            return new JwtResponse(jwtProvider.generateAccessToken(user), refreshToken);
 
-            }
+           }
         } else {
             throw new AuthException("Password is incorrect");
         }
@@ -90,7 +84,7 @@ public class AuthService {
         newUser.setActivated(false);
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setTo(authRequest.getEmail());
-        simpleMailMessage.setSubject("test");
+        simpleMailMessage.setSubject("Visit this page to activate you account");
         simpleMailMessage.setText("https://social-network-backend-2782464b9c31.herokuapp.com/api/auth/activate/" + newUser.getActivationCode());
 
         javaMailSender.send(simpleMailMessage);
@@ -138,19 +132,19 @@ public class AuthService {
 
     public JwtResponse refresh(@NonNull String refreshToken) {
 
-        final Claims claims = jwtProvider.getRefreshClaims(refreshToken);
-        final String email = claims.getSubject();
-        final String saveRefreshToken = refreshStorage.get(email);
-        if (saveRefreshToken != null && saveRefreshToken.equals(refreshToken)) {
-            final User user = userService.getByEmail(email)
-                    .orElseThrow(() -> new AuthException("User not found"));
-            final String accessToken = jwtProvider.generateAccessToken(user);
-            final String newRefreshToken = jwtProvider.generateRefreshToken(user);
-            refreshStorage.put(user.getEmail(), newRefreshToken);
-            return new JwtResponse(accessToken, newRefreshToken);
-        } else {
-            return new JwtResponse(null, null);
-        }
+            final Claims claims = jwtProvider.getRefreshClaims(refreshToken);
+            final String email = claims.getSubject();
+            final String saveRefreshToken = refreshStorage.get(email);
+            if (saveRefreshToken != null && saveRefreshToken.equals(refreshToken)) {
+                final User user = userService.getByEmail(email)
+                        .orElseThrow(() -> new AuthException("User not found"));
+                final String accessToken = jwtProvider.generateAccessToken(user);
+                final String newRefreshToken = jwtProvider.generateRefreshToken(user);
+                refreshStorage.put(user.getEmail(), newRefreshToken);
+                return new JwtResponse(accessToken, newRefreshToken);
+            } else {
+                return new JwtResponse(null, null);
+            }
 
 
     }
@@ -163,6 +157,17 @@ public class AuthService {
         return refreshStorage.get(email);
 
     }
+
+   public void sendChangePasswordMessage(Optional<User> userOptional, Email email) {
+
+       SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+       simpleMailMessage.setTo(email.getEmail());
+       simpleMailMessage.setSubject(" Use this code to restore your password");
+       simpleMailMessage.setText(" Code:"  + userOptional.get().getActivationCode());
+
+       javaMailSender.send(simpleMailMessage);
+
+   }
 
     public JwtAuthentication getAuthInfo() {
         return (JwtAuthentication) SecurityContextHolder.getContext().getAuthentication();
