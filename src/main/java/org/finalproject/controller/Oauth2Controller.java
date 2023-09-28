@@ -64,10 +64,10 @@ class Oauth2Controller {
         String refresh = jwtProvider.generateOauthRefreshToken(email);
         authService.loginAuth2(email,refresh);
         JwtResponse resp = new JwtResponse(access,refresh);
-         Map<String, String> newRefreshStorage = authService.getRefreshStorage();
+       /*  Map<String, String> newRefreshStorage = authService.getRefreshStorage();
                         newRefreshStorage.remove("token");
 
-                        authService.setRefreshStorage(newRefreshStorage);         
+                        authService.setRefreshStorage(newRefreshStorage); */        
         
         return ResponseEntity.ok(resp);
 
