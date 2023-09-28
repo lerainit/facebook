@@ -53,21 +53,14 @@ class Oauth2Controller {
         final String email = claims.getSubject();
       if (authService.getRefreshStorage().containsKey(email)) {
            
-         Map<String, String> nRefreshStorage = authService.getRefreshStorage();
-                        nRefreshStorage.remove("token");
 
-                        authService.setRefreshStorage(nRefreshStorage);  
-            
             return ResponseEntity.ok(new JwtResponse(access,authService.getRefreshStorage().get(email)));
 
         }
         String refresh = jwtProvider.generateOauthRefreshToken(email);
         authService.loginAuth2(email,refresh);
         
-         Map<String, String> newRefreshStorage = authService.getRefreshStorage();
-                        newRefreshStorage.remove("token");
-                        
-                        authService.setRefreshStorage(newRefreshStorage);         
+          
         
         return ResponseEntity.ok(new JwtResponse(access,refresh));
 
