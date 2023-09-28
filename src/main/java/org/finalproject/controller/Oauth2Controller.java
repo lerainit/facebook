@@ -27,7 +27,7 @@ import java.util.Optional;
 @RequestMapping("/api")
 @Slf4j
 @Validated
-class Oauth2Controller {
+public class Oauth2Controller {
 
     private final AuthService authService;
 
