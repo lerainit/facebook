@@ -53,7 +53,7 @@ class Oauth2Controller {
         final String email = claims.getSubject();
       if (authService.getRefreshStorage().containsKey(email)) {
           
-        Map<String,String> newRefreshStorage = authService.getRefreshStorage();
+        HashMap<String,String> newRefreshStorage = authService.getRefreshStorage();
         
         newRefreshStorage.remove( "token" );
           
