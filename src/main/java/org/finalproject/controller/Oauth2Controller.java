@@ -53,7 +53,7 @@ public class Oauth2Controller {
         final String email = claims.getSubject();
       if (authService.getRefreshStorage().containsKey(email)) {
           
-         Map<String, String> newRefreshStorage = authService.getRefreshStorage();  
+         Map<String, String> storage = authService.getRefreshStorage();  
           
         return ResponseEntity.ok(new JwtResponse(access,authService.getRefreshStorage().get(email)));
 
