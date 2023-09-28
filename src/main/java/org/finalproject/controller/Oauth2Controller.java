@@ -54,7 +54,7 @@ class Oauth2Controller {
       if (authService.getRefreshStorage().containsKey(email)) {
           
         Map<String, String> newRefreshStorage = authService.getRefreshStorage();
-        newRefreshStorage.remove("token");
+        
                         
         authService.setRefreshStorage(newRefreshStorage);  
           
