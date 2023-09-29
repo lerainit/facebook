@@ -52,7 +52,7 @@ public class Oauth2Controller {
 
         if ( access == null ) {
             
-            return ResponseEntity.badRequest.body("User not authorized");
+            return ResponseEntity.badRequest().body("User not authorized");
         } else {
 
         final Claims claims = jwtProvider.getAccessClaims(access);
