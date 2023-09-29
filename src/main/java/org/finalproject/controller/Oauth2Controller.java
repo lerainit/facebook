@@ -50,6 +50,11 @@ public class Oauth2Controller {
 
         String access = authService.getRefreshStorage().get("token");
 
+        if ( access == null ) {
+            
+            return ResponseEntity.badRequest.body("User not authorized");
+        } else {
+
         final Claims claims = jwtProvider.getAccessClaims(access);
         final String email = claims.getSubject();
        if (authService.getRefreshStorage().containsKey(email)) {
@@ -71,7 +76,7 @@ public class Oauth2Controller {
                         authService.setRefreshStorage(newRefreshStorage);         
         
         return ResponseEntity.ok(resp);
-
+        }
 
     }
 
