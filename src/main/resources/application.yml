@@ -1,0 +1,96 @@
+jwt:
+  secret:
+    access: LejjnLZua6SlR7eZXByD2+9M5P+dYxK3IlfA6XgPksuXijiXMAcpulI03o2Vq+PjYENhgTJGXLNm7YS4f1+IMw==
+    refresh: cRO8f7Q/HaE/X1QjxAHYL8Dm5qkTI68WiNi9elE1NFqsL2up0RlZn/e7aD2R5i8cMvCksBEDhUAOZAhsypQaXw==
+server:
+  port: 9000
+spring:
+  main:
+    allow-circular-references: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 903238603946-3291rnl4i6cmmcoigv6vaa2g0s741f43.apps.googleusercontent.com
+            client-secret: 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
+            scope: openid,profile,email
+
+  mail:
+    port: 587
+    host: smtp.gmail.com
+
+  h2:
+    console:
+      enabled: true
+      settings:
+        trace: false
+logging:
+  level:
+    org:
+#      hibernate: debug
+---
+spring:
+  profiles:
+    active: prod #dev
+---
+spring:
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data-h2.sql
+      schema-locations: classpath:schema-h2.sql
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    defer-datasource-initialization: true
+    properties:
+      generate_statistics: true
+    generate-ddl: true
+  config:
+    activate:
+      on-profile: dev
+---
+spring:
+  #sql:
+  #init:
+  #mode: always
+  #schema-locations: classpath:hr_schema_postgres.sql
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/facebook}
+    driver-class-name: org.postgresql.Driver
+    #url: jdbc:postgresql://localhost:5432/
+    username: postgres
+    password: postgres
+  jpa:
+    #  open-in-view: true
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        generate_statistics: false
+    show-sql: true
+  config:
+    activate:
+      on-profile: prod
+        
+        Налаштування для Flyway
+      spring:
+        flyway:
+          url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/facebook}
+          user: postgres
+          password: postgres
+          locations: classpath:db/migration
+
+welcome:
+  message: welcome
+  cloudName: ${cloudName}
+  apiKey: ${apiKey}
+  apiSecret: ${apiSecret}
+  rabbitUserAndVHost: ${rabbitUser}
+  rabbitPass: ${rabbitPass}
+  cloudamqp_url: ${CLOUDAMQP_URL}
